@@ -3,30 +3,37 @@ from itertools import islice
 import matplotlib.pyplot as plt
 
 
+def pretty_print(KeyWord, Value):
+    print("--------------------------------------------------------------------------------------------------------------------------------------------------")
+    print(KeyWord)
+    print(Value)
+    print("__________________________________________________________________________________________________________________________________________________")
+
+
 serieA = pd.read_csv("Es1_tabella.csv")
 
-Team = "Genoa"
-resTot = serieA[(serieA.HomeTeam == Team) | (serieA.AwayTeam == Team)]
+Team = "Milan"
+TeamMatches = serieA.loc[(serieA.HomeTeam == Team) | (serieA.AwayTeam == Team)].copy()
 
 #Selecting all the matches of a Team
-#print(resTot)
+pretty_print(f"All {Team} matches 2018/19",TeamMatches)
 
-maxHomeShots = resTot[["HS"]][(resTot.HomeTeam == Team)].max()
-maxAwayShots = resTot[["AS"]][(resTot.AwayTeam == Team)].max()
+maxHomeShots = TeamMatches[["HS"]][(TeamMatches.HomeTeam == Team)].max()
+maxAwayShots = TeamMatches[["AS"]][(TeamMatches.AwayTeam == Team)].max()
 
 maxShots = max(maxHomeShots[0],maxAwayShots[0])
 #print(maxShots)
 
-matchesWithMostShots = resTot[((resTot.HomeTeam == Team) & (resTot.HS == maxShots)) | ((resTot.AwayTeam == Team) & (resTot.AS == maxShots))]
+matchesWithMostShots = TeamMatches[((TeamMatches.HomeTeam == Team) & (TeamMatches.HS == maxShots)) | ((TeamMatches.AwayTeam == Team) & (TeamMatches.AS == maxShots))]
 
-#print(matchesWithMostShots)
+pretty_print(f"{Team}'s matches with most shots on target ({maxShots} shots)",matchesWithMostShots)
+
+
 #Selecting the matches with the most shots on target
 
 points_column=[0]
 
-firstRow = resTot.head(1)
-
-print(firstRow["FTR"].iloc[0])
+firstRow = TeamMatches.head(1)
 
 
 if(firstRow["FTR"].iloc[0] == "D"):
@@ -37,7 +44,7 @@ elif(firstRow["FTR"].iloc[0] == "A" and firstRow["AwayTeam"].iloc[0] == Team):
     points_column[0]+=3
     
 i=1
-for index,row in islice(resTot.iterrows(),1,None):
+for index,row in islice(TeamMatches.iterrows(),1,None):
     if(row["FTR"] == "D"):
         points_column.append(points_column[i-1]+1)
     elif(row["FTR"] == "H" and row["HomeTeam"] == Team):
@@ -48,18 +55,33 @@ for index,row in islice(resTot.iterrows(),1,None):
         points_column.append(points_column[i-1])
     i+=1
 
-print(len(points_column))
+
 
 #adding points column
-resTot['PTS'] = points_column
+newSeries = pd.Series(points_column)
+TeamMatches['PTS'] = newSeries.values
 
-#print(resTot)
-
-resTot.plot(kind = "line",x="Date", y="PTS")
+#print(TeamMatches)
+TeamMatches.plot(kind = "line", x="Date", y="PTS")
 
 plt.show()
 
-    
-    
+prevPoints = 0
+maxStreak = 0
+currentStreak = 0
 
 
+for index, value in TeamMatches["PTS"].items():
+    if (prevPoints+3 == value):
+        currentStreak += 1
+        
+    else:
+        if (currentStreak > maxStreak):
+            maxStreak = currentStreak
+            currentStreak = 0
+        else:
+            currentStreak = 0
+    prevPoints = value 
+
+pretty_print(f"{Team}'s longest winnin streak",maxStreak)
+    
