@@ -2,6 +2,7 @@ import pandas as pd
 from itertools import islice
 import matplotlib.pyplot as plt
 
+
 serieA = pd.read_csv("Es1_tabella.csv")
 
 Team = "Genoa"
